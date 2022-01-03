@@ -430,8 +430,14 @@ KERNEL_RECOVERY_MODULES_OUT := $(TARGET_RECOVERY_ROOT_OUT)
 $(recovery_uncompressed_ramdisk): $(TARGET_PREBUILT_INT_KERNEL)
 endif
 
+ifdef BOARD_CUSTOM_KERNEL_MK
+include $(BOARD_CUSTOM_KERNEL_MK)
+endif
+
+ifndef BOARD_CUSTOM_KERNEL_MK
 $(KERNEL_OUT):
 	mkdir -p $(KERNEL_OUT)
+endif
 
 $(KERNEL_CONFIG): $(KERNEL_OUT) $(ALL_KERNEL_DEFCONFIG_SRCS)
 	@echo "Building Kernel Config"
