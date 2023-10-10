@@ -213,11 +213,17 @@ ifneq ($(TARGET_KERNEL_CLANG_COMPILE), false)
     endif
 endif
 
+# Pass prebuilt LZ4 path
+KERNEL_MAKE_FLAGS += LZ4=$(BUILD_TOP)/prebuilts/kernel-build-tools/linux-x86/bin/lz4
+
 # Since Linux 4.16, flex and bison are required
 KERNEL_MAKE_FLAGS += LEX=$(BUILD_TOP)/prebuilts/build-tools/$(HOST_PREBUILT_TAG)/bin/flex
 KERNEL_MAKE_FLAGS += YACC=$(BUILD_TOP)/prebuilts/build-tools/$(HOST_PREBUILT_TAG)/bin/bison
 KERNEL_MAKE_FLAGS += M4=$(BUILD_TOP)/prebuilts/build-tools/$(HOST_PREBUILT_TAG)/bin/m4
 TOOLS_PATH_OVERRIDE += BISON_PKGDATADIR=$(BUILD_TOP)/prebuilts/build-tools/common/bison
+
+# Since Linux 5.10, pahole is required
+KERNEL_MAKE_FLAGS += PAHOLE=$(BUILD_TOP)/prebuilts/kernel-build-tools/linux-x86/bin/pahole
 
 # Set the out dir for the kernel's O= arg
 # This needs to be an absolute path, so only set this if the standard out dir isn't used

@@ -205,10 +205,14 @@ PRODUCT_PACKAGE_OVERLAYS += \
 
 PRODUCT_PACKAGES += \
     DocumentsUIOverlay \
-    NetworkStackOverlay \
-    TrebuchetOverlay
+    NetworkStackOverlay
 
 # Translations
+CUSTOM_LOCALES += \
+    ast_ES \
+    gd_GB \
+    cy_GB
+
 PRODUCT_ENFORCE_RRO_EXCLUDED_OVERLAYS += vendor/crowdin/overlay
 PRODUCT_PACKAGE_OVERLAYS += vendor/crowdin/overlay
 

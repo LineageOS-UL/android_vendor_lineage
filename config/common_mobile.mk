@@ -20,9 +20,11 @@ PRODUCT_PACKAGES += \
 
 ifeq ($(PRODUCT_TYPE), go)
 PRODUCT_PACKAGES += \
+    SystemUIGo \
     TrebuchetQuickStepGo
 
 PRODUCT_DEXPREOPT_SPEED_APPS += \
+    SystemUIGo \
     TrebuchetQuickStepGo
 else
 PRODUCT_PACKAGES += \
@@ -31,6 +33,9 @@ PRODUCT_PACKAGES += \
 PRODUCT_DEXPREOPT_SPEED_APPS += \
     TrebuchetQuickStep
 endif
+
+PRODUCT_PACKAGES += \
+    TrebuchetOverlay
 
 # Charger
 PRODUCT_PACKAGES += \
