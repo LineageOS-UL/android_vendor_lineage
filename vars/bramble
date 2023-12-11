@@ -1,24 +1,8 @@
 # Pixel 4a (5G)
 
-# Usage: ${firmware_partitions[@]}
-readonly firmware_partitions=(
-  abl
-  aop
-  devcfg
-  hyp
-  keymaster
-  qupfw
-  tz
-  uefisecapp
-  xbl
-  xbl_config
-  featenabler
-  modem
-)
-
 # Usage: ${device_repos[@]}
 device_repos=(
-  # common repos in redfin
+  # common repos in barbet
   device/google/bramble
 )
 
