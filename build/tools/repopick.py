@@ -34,9 +34,6 @@ from concurrent.futures import ThreadPoolExecutor
 from functools import cmp_to_key, partial
 from xml.etree import ElementTree
 
-# Default to LineageOS Gerrit
-DEFAULT_GERRIT = "https://review.lineageos.org"
-
 
 # cmp() is not available in Python 3, define it manually
 # See https://docs.python.org/3.0/whatsnew/3.0.html#ordering-comparisons
@@ -187,6 +184,11 @@ def is_closed(status):
     return status not in ("OPEN", "NEW", "DRAFT")
 
 
+def is_lineage_gerrit(remote_url):
+    p = urllib.parse.urlparse(remote_url)
+    return p.hostname == "review.lineageos.org"
+
+
 def commit_exists(project_path, revision):
     return (
         subprocess.call(
@@ -285,7 +287,7 @@ def main():
     parser.add_argument(
         "-g",
         "--gerrit",
-        default=DEFAULT_GERRIT,
+        default="https://review.lineageos.org",
         metavar="",
         help="Gerrit Instance to use. Form proto://[user@]host[:port]",
     )
@@ -546,7 +548,7 @@ def main():
         mergables[project_path].append(item)
 
     # round 1: start branch and drop picked changes
-    for project_path, per_path_mergables in mergables.items():
+    for project_path in mergables:
         # If --start-branch is given, create the branch (more than once per path is okay; repo ignores gracefully)
         if args.start_branch:
             subprocess.run(["repo", "start", args.start_branch[0], project_path])
@@ -585,7 +587,7 @@ def main():
                         picked_change_ids.append(head_change_id.strip())
                         break
 
-        for item in per_path_mergables:
+        def filter_picked(item):
             # Check if change is already picked to HEAD...HEAD~check_picked_count
             if item["change_id"] in picked_change_ids:
                 print(
@@ -593,7 +595,10 @@ def main():
                         item["id"], project_path
                     )
                 )
-                per_path_mergables.remove(item)
+                return False
+            return True
+
+        mergables[project_path] = list(filter(filter_picked, mergables[project_path]))
 
     # round 2: fetch changes in parallel if not pull
     if not args.pull:
@@ -635,8 +640,8 @@ def do_git_fetch_pull(args, item):
         cmd.append("--quiet")
     cmd.extend(["", item["fetch"][method]["ref"]])
 
-    # Try fetching from GitHub first if using default gerrit
-    if args.gerrit == DEFAULT_GERRIT:
+    # Try fetching from GitHub first if using lineage gerrit
+    if is_lineage_gerrit(args.gerrit):
         if args.verbose:
             print("Trying to fetch the change from GitHub")
 
@@ -649,9 +654,9 @@ def do_git_fetch_pull(args, item):
             return
         print("ERROR: git command failed")
 
-    # If not using the default gerrit or github failed, fetch from gerrit.
+    # If not using the lineage gerrit or github failed, fetch from gerrit.
     if args.verbose:
-        if args.gerrit == DEFAULT_GERRIT:
+        if is_lineage_gerrit(args.gerrit):
             print(
                 "Fetching from GitHub didn't work, trying to fetch the change from Gerrit"
             )
