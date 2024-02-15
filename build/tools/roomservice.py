@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # Copyright (C) 2012-2013, The CyanogenMod Project
 #           (C) 2017-2018,2020-2021, The LineageOS Project
 #
@@ -23,20 +23,9 @@ import netrc
 import os
 import re
 import sys
-try:
-  # For python3
-  import urllib.error
-  import urllib.parse
-  import urllib.request
-except ImportError:
-  # For python2
-  import imp
-  import urllib2
-  import urlparse
-  urllib = imp.new_module('urllib')
-  urllib.error = urllib2
-  urllib.parse = urlparse
-  urllib.request = urllib2
+import urllib.error
+import urllib.parse
+import urllib.request
 
 from xml.etree import ElementTree
 
