@@ -1,4 +1,4 @@
-# Copyright (C) 2021-2023 The LineageOS Project
+# Copyright (C) 2021-2024 The LineageOS Project
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-$(call inherit-product, build/target/product/sdk_phone_x86_64.mk)
+$(call inherit-product, device/generic/goldfish/64bitonly/product/sdk_phone64_x86_64.mk)
 
 include vendor/lineage/build/target/product/lineage_generic_target.mk
 
@@ -28,3 +28,7 @@ PRODUCT_MODEL := LineageOS Android SDK built for x86_64
 
 PRODUCT_SDK_ADDON_NAME := lineage
 PRODUCT_SDK_ADDON_SYS_IMG_SOURCE_PROP := $(LOCAL_PATH)/source.properties
+
+# Increase Partition size: 8G+8M
+BOARD_SUPER_PARTITION_SIZE ?= 8598323200
+BOARD_EMULATOR_DYNAMIC_PARTITIONS_SIZE ?= 8589934592
