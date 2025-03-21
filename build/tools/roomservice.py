@@ -16,12 +16,11 @@
 
 from __future__ import print_function
 
-import base64
 import glob
 import json
-import netrc
 import os
 import re
+import subprocess
 import sys
 import urllib.error
 import urllib.parse
@@ -49,21 +48,6 @@ if not depsonly:
     print("Device %s not found. Attempting to retrieve device repository from LineageOS Github (http://github.com/LineageOS)." % device)
 
 repositories = []
-
-try:
-    authtuple = netrc.netrc().authenticators("api.github.com")
-
-    if authtuple:
-        auth_string = ('%s:%s' % (authtuple[0], authtuple[2])).encode()
-        githubauth = base64.encodestring(auth_string).decode().replace('\n', '')
-    else:
-        githubauth = None
-except:
-    githubauth = None
-
-def add_auth(githubreq):
-    if githubauth:
-        githubreq.add_header("Authorization","Basic %s" % githubauth)
 
 if not depsonly:
     githubreq = urllib.request.Request("https://raw.githubusercontent.com/LineageOS/mirror/main/default.xml")
@@ -233,6 +217,8 @@ def fetch_dependencies(repo_path):
                 if 'branch' not in dependency:
                     if dependency.get('remote', 'github') == 'github':
                         dependency['branch'] = get_default_or_fallback_revision(dependency['repository'])
+                        if not dependency['branch']:
+                            sys.exit(1)
                     else:
                         dependency['branch'] = None
             verify_repos.append(dependency['target_path'])
@@ -267,10 +253,17 @@ def get_default_or_fallback_revision(repo_name):
     print("Default revision: %s" % default_revision)
     print("Checking branch info")
 
-    githubreq = urllib.request.Request("https://api.github.com/repos/LineageOS/" + repo_name + "/branches")
-    add_auth(githubreq)
-    result = json.loads(urllib.request.urlopen(githubreq, timeout=5).read().decode())
-    if has_branch(result, default_revision):
+    try:
+        stdout = subprocess.run(
+            ["git", "ls-remote", "-h", "https://:@github.com/LineageOS/" + repo_name],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        ).stdout.decode()
+        branches = [x.split("refs/heads/")[-1] for x in stdout.splitlines()]
+    except:
+        return ""
+
+    if default_revision in branches:
         return default_revision
 
     fallbacks = [ get_default_revision_no_minor() ]
@@ -278,16 +271,16 @@ def get_default_or_fallback_revision(repo_name):
         fallbacks += list(filter(bool, os.getenv('ROOMSERVICE_BRANCHES').split(' ')))
 
     for fallback in fallbacks:
-        if has_branch(result, fallback):
+        if fallback in branches:
             print("Using fallback branch: %s" % fallback)
             return fallback
 
     print("Default revision %s not found in %s. Bailing." % (default_revision, repo_name))
     print("Branches found:")
-    for branch in [branch['name'] for branch in result]:
+    for branch in branches:
         print(branch)
     print("Use the ROOMSERVICE_BRANCHES environment variable to specify a list of fallback branches.")
-    sys.exit()
+    return ""
 
 if depsonly:
     repo_path = get_from_manifest(device)
@@ -306,6 +299,12 @@ else:
             manufacturer = repo_name.replace("android_device_", "").replace("_" + device, "")
             repo_path = "device/%s/%s" % (manufacturer, device)
             revision = get_default_or_fallback_revision(repo_name)
+            if revision == "":
+                # Some devices have the same codename but shipped a long time ago and may not have
+                # a current branch set up.
+                # Continue looking up all repositories until a match is found or no repos are left
+                # to check.
+                continue
 
             device_repository = {'repository':repo_name,'target_path':repo_path,'branch':revision}
             add_to_manifest([device_repository])
