@@ -27,8 +27,13 @@ ifeq ($(TARGET_BUILD_VARIANT),eng)
 # Disable ADB authentication
 PRODUCT_SYSTEM_DEFAULT_PROPERTIES += ro.adb.secure=0
 else
+ifdef WITH_ADB_INSECURE
+# Forcebly disable ADB authentication
+PRODUCT_SYSTEM_DEFAULT_PROPERTIES += ro.adb.secure=0
+else
 # Enable ADB authentication
 PRODUCT_SYSTEM_DEFAULT_PROPERTIES += ro.adb.secure=1
+endif
 
 # Disable extra StrictMode features on all non-engineering builds
 PRODUCT_SYSTEM_DEFAULT_PROPERTIES += persist.sys.strictmode.disable=true
@@ -150,6 +155,9 @@ PRODUCT_PACKAGES += \
     setcap \
     vim
 
+PRODUCT_PACKAGES += \
+    nano_recovery
+
 PRODUCT_ARTIFACT_PATH_REQUIREMENT_ALLOWED_LIST += \
     system/bin/curl \
     system/bin/getcap \
@@ -218,6 +226,11 @@ PRODUCT_DEXPREOPT_SPEED_APPS += \
 
 PRODUCT_SYSTEM_DEFAULT_PROPERTIES += \
     dalvik.vm.systemuicompilerfilter=speed
+
+ifeq ($(TARGET_BUILD_VARIANT),userdebug)
+PRODUCT_SYSTEM_DEFAULT_PROPERTIES += \
+    debug.sf.enable_transaction_tracing=false
+endif
 
 # SetupWizard
 PRODUCT_PRODUCT_PROPERTIES += \
